@@ -1,0 +1,499 @@
+
+
+<!DOCTYPE html>
+
+<html lang="ru">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=no">
+
+<title>ISLAND SURVIVAL</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{margin:0;overflow:hidden;font-family:Arial;background:#75c9df}
+
+#game{width:100vw;height:100dvh;display:block}
+
+#hud{position:fixed;top:15px;left:15px;color:white;
+
+background:#102b2bbd;padding:13px 17px;border-radius:14px;
+
+font-size:14px;line-height:1.8;pointer-events:none}
+
+#title{font-size:19px;font-weight:bold;letter-spacing:2px}
+
+#joy{position:fixed;bottom:30px;left:25px;width:115px;height:115px;
+
+border-radius:50%;background:#ffffff35;border:2px solid #ffffff80;
+
+touch-action:none}
+
+#stick{position:absolute;width:48px;height:48px;border-radius:50%;
+
+background:#ffffffb0;left:31px;top:31px}
+
+#hint{position:fixed;bottom:12px;right:15px;color:white;
+
+font-size:12px;text-shadow:0 1px 4px black}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="hud">
+
+  <div id="title">🏝 ISLAND SURVIVAL</div>
+
+  ❤️ Здоровье: 100<br>
+
+  🍖 Голод: 100<br>
+
+  💧 Жажда: 100<br>
+
+  🪵 Дерево: <span id="wood">0</span>
+
+</div>
+
+<div id="game"></div>
+
+<div id="joy"><div id="stick"></div></div>
+
+<div id="hint">Исследуй остров</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x8bd5e8);
+
+scene.fog = new THREE.Fog(0x8bd5e8, 65, 150);
+
+const camera = new THREE.PerspectiveCamera(
+
+  65, innerWidth/innerHeight, 0.1, 300
+
+);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+
+renderer.setSize(innerWidth,innerHeight);
+
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+document.getElementById("game").appendChild(renderer.domElement);
+
+// Освещение
+
+scene.add(new THREE.HemisphereLight(0xd8f5ff,0x52643a,2));
+
+const sun = new THREE.DirectionalLight(0xffedc2,2);
+
+sun.position.set(-30,60,25);
+
+scene.add(sun);
+
+// Океан
+
+const ocean = new THREE.Mesh(
+
+  new THREE.PlaneGeometry(300,300),
+
+  new THREE.MeshStandardMaterial({color:0x168cba,roughness:0.35})
+
+);
+
+ocean.rotation.x=-Math.PI/2;
+
+ocean.position.y=-0.8;
+
+scene.add(ocean);
+
+// Песчаный остров
+
+function disc(radius,height,color,y){
+
+ const m=new THREE.Mesh(
+
+  new THREE.CylinderGeometry(radius,radius,height,64),
+
+  new THREE.MeshStandardMaterial({color,roughness:1})
+
+ );
+
+ m.position.y=y;
+
+ scene.add(m);
+
+ return m;
+
+}
+
+disc(39,2,0xd8c18b,-0.1);
+
+disc(33,1,0x579b48,0.7);
+
+// Трава
+
+const grass = new THREE.Mesh(
+
+ new THREE.CircleGeometry(32.7,64),
+
+ new THREE.MeshStandardMaterial({color:0x65a94b})
+
+);
+
+grass.rotation.x=-Math.PI/2;
+
+grass.position.y=1.22;
+
+scene.add(grass);
+
+// Пальмы
+
+function palm(x,z){
+
+ const group=new THREE.Group();
+
+ group.position.set(x,1.2,z);
+
+ const trunk=new THREE.Mesh(
+
+  new THREE.CylinderGeometry(.35,.55,6,8),
+
+  new THREE.MeshStandardMaterial({color:0x936039})
+
+ );
+
+ trunk.position.y=3;
+
+ trunk.rotation.z=.08;
+
+ group.add(trunk);
+
+ for(let i=0;i<8;i++){
+
+  const leaf=new THREE.Mesh(
+
+   new THREE.ConeGeometry(.65,6,5),
+
+   new THREE.MeshStandardMaterial({color:i%2?0x21834a:0x319c4d})
+
+  );
+
+  const a=i*Math.PI/4;
+
+  leaf.position.set(Math.cos(a)*2,5.5,Math.sin(a)*2);
+
+  leaf.rotation.z=-Math.PI/2+Math.sin(a)*.4;
+
+  leaf.rotation.y=-a;
+
+  group.add(leaf);
+
+ }
+
+ scene.add(group);
+
+}
+
+for(let i=0;i<42;i++){
+
+ const a=Math.random()*Math.PI*2;
+
+ const r=9+Math.random()*22;
+
+ palm(Math.cos(a)*r,Math.sin(a)*r);
+
+}
+
+// Камни
+
+for(let i=0;i<30;i++){
+
+ const a=Math.random()*Math.PI*2;
+
+ const r=5+Math.random()*27;
+
+ const rock=new THREE.Mesh(
+
+  new THREE.DodecahedronGeometry(.5+Math.random()*1.2,0),
+
+  new THREE.MeshStandardMaterial({color:0x777b75,roughness:1})
+
+ );
+
+ rock.position.set(Math.cos(a)*r,1.6,Math.sin(a)*r);
+
+ rock.scale.y=.7;
+
+ scene.add(rock);
+
+}
+
+// Цветы
+
+for(let i=0;i<70;i++){
+
+ const a=Math.random()*Math.PI*2;
+
+ const r=Math.random()*29;
+
+ const flower=new THREE.Mesh(
+
+  new THREE.SphereGeometry(.12,6,6),
+
+  new THREE.MeshStandardMaterial({color:[0xffe16b,0xff8db4,0xffffff][i%3]})
+
+ );
+
+ flower.position.set(Math.cos(a)*r,1.35,Math.sin(a)*r);
+
+ scene.add(flower);
+
+}
+
+// Персонаж
+
+const player=new THREE.Group();
+
+const skin=new THREE.MeshStandardMaterial({color:0xe8b78d});
+
+const shirt=new THREE.MeshStandardMaterial({color:0x2876ad});
+
+const pants=new THREE.MeshStandardMaterial({color:0x303747});
+
+const body=new THREE.Mesh(new THREE.CylinderGeometry(.42,.48,1.1,12),shirt);
+
+body.position.y=1.35;
+
+player.add(body);
+
+const head=new THREE.Mesh(new THREE.SphereGeometry(.34,16,12),skin);
+
+head.position.y=2.12;
+
+player.add(head);
+
+const legs=new THREE.Mesh(new THREE.BoxGeometry(.65,.75,.4),pants);
+
+legs.position.y=.48;
+
+player.add(legs);
+
+player.position.set(0,1.2,0);
+
+scene.add(player);
+
+// Управление
+
+let moveX=0,moveZ=0,wood=0;
+
+const keys={};
+
+addEventListener("keydown",e=>keys[e.key.toLowerCase()]=true);
+
+addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+
+const joy=document.getElementById("joy");
+
+const stick=document.getElementById("stick");
+
+let active=false;
+
+function joystick(e){
+
+ const rect=joy.getBoundingClientRect();
+
+ let x=e.clientX-(rect.left+rect.width/2);
+
+ let y=e.clientY-(rect.top+rect.height/2);
+
+ const max=35;
+
+ const len=Math.hypot(x,y);
+
+ if(len>max){x=x/len*max;y=y/len*max;}
+
+ moveX=x/max;
+
+ moveZ=y/max;
+
+ stick.style.transform=`translate(${x}px,${y}px)`;
+
+}
+
+joy.addEventListener("pointerdown",e=>{
+
+ active=true;joy.setPointerCapture(e.pointerId);joystick(e);
+
+});
+
+joy.addEventListener("pointermove",e=>{if(active)joystick(e)});
+
+function stop(){
+
+ active=false;moveX=0;moveZ=0;stick.style.transform="translate(0,0)";
+
+}
+
+joy.addEventListener("pointerup",stop);
+
+joy.addEventListener("pointercancel",stop);
+
+// Дерево, которое можно собирать
+
+const trees=[];
+
+for(let i=0;i<15;i++){
+
+ const a=Math.random()*Math.PI*2;
+
+ const r=7+Math.random()*22;
+
+ const x=Math.cos(a)*r,z=Math.sin(a)*r;
+
+ const obj=new THREE.Group();
+
+ const log=new THREE.Mesh(
+
+  new THREE.CylinderGeometry(.25,.3,2,8),
+
+  new THREE.MeshStandardMaterial({color:0x88512d})
+
+ );
+
+ log.position.y=1;
+
+ obj.add(log);
+
+ const top=new THREE.Mesh(
+
+  new THREE.SphereGeometry(1.2,8,7),
+
+  new THREE.MeshStandardMaterial({color:0x287d3c})
+
+ );
+
+ top.position.y=2.5;
+
+ obj.add(top);
+
+ obj.position.set(x,1.2,z);
+
+ scene.add(obj);
+
+ trees.push(obj);
+
+}
+
+// Камера и игровой цикл
+
+let last=0;
+
+function animate(t){
+
+ requestAnimationFrame(animate);
+
+ const dt=Math.min((t-last)/1000,.05);
+
+ last=t;
+
+ let x=moveX,z=moveZ;
+
+ if(keys.w||keys.arrowup)z-=1;
+
+ if(keys.s||keys.arrowdown)z+=1;
+
+ if(keys.a||keys.arrowleft)x-=1;
+
+ if(keys.d||keys.arrowright)x+=1;
+
+ const len=Math.hypot(x,z);
+
+ if(len>1){x/=len;z/=len;}
+
+ player.position.x+=x*9*dt;
+
+ player.position.z+=z*9*dt;
+
+ const distance=Math.hypot(player.position.x,player.position.z);
+
+ if(distance>31){
+
+  player.position.x*=31/distance;
+
+  player.position.z*=31/distance;
+
+ }
+
+ if(len>0.05)player.rotation.y=Math.atan2(x,z);
+
+ const target=new THREE.Vector3(
+
+  player.position.x,player.position.y+2,player.position.z
+
+ );
+
+ const desired=new THREE.Vector3(
+
+  player.position.x,player.position.y+8,player.position.z+12
+
+ );
+
+ camera.position.lerp(desired,.08);
+
+ camera.lookAt(target);
+
+ // Подбор дерева рядом с игроком
+
+ for(let i=trees.length-1;i>=0;i--){
+
+  if(trees[i].position.distanceTo(player.position)<2){
+
+   scene.remove(trees[i]);
+
+   trees.splice(i,1);
+
+   wood++;
+
+   document.getElementById("wood").textContent=wood;
+
+  }
+
+ }
+
+ renderer.render(scene,camera);
+
+}
+
+camera.position.set(0,10,15);
+
+animate(0);
+
+addEventListener("resize",()=>{
+
+ camera.aspect=innerWidth/innerHeight;
+
+ camera.updateProjectionMatrix();
+
+ renderer.setSize(innerWidth,innerHeight);
+
+});
+
+</script>
+
+</body>
+
+</html>
